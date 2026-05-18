@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use App\Models\Booking;
 use App\Models\Schedule;
 use App\Models\Poli;
+use App\Services\FirebaseQueueService;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class BookingController extends Controller
 {
@@ -19,7 +22,6 @@ class BookingController extends Controller
         ]);
 
         $schedule = Schedule::findOrFail($request->schedule_id);
-
         $poli = Poli::findOrFail($schedule->poli_id);
 
         $lastBooking = Booking::whereDate('tanggal', $request->tanggal)
@@ -36,8 +38,7 @@ class BookingController extends Controller
             $nextNumber = $lastNumber + 1;
         }
 
-        $nomorAntrean = $poli->kode_poli .
-            str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+        $nomorAntrean = $poli->kode_poli . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
 
         $booking = Booking::create([
             'patient_id' => $request->patient_id,
@@ -60,7 +61,6 @@ class BookingController extends Controller
     public function show($id)
     {
         $booking = Booking::findOrFail($id);
-
         return response()->json($booking);
     }
 
@@ -77,12 +77,31 @@ class BookingController extends Controller
         return response()->json($queues);
     }
 
-    public function callQueue($id)
+    // --- INI ADALAH BAGIAN YANG KITA UBAH UNTUK FIREBASE ---
+    public function callQueue($id, FirebaseQueueService $firebaseService)
     {
         $booking = Booking::findOrFail($id);
 
+        // Ubah status di database MySQL/SQLite lokal
         $booking->status = 'calling';
         $booking->save();
+
+        // Kirim data ke Firebase Firestore secara Real-Time!
+        try {
+            $firebaseService->updateActiveQueue($booking);
+        } catch (Throwable $e) {
+            Log::error('Firebase Error: '.$e->getMessage(), [
+                'booking_id' => $booking->id,
+                'exception' => $e,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Queue status updated locally, but failed to write to Firebase.',
+                'firebase_error' => config('app.debug') ? $e->getMessage() : null,
+                'data' => $booking,
+            ], 502);
+        }
 
         return response()->json([
             'success' => true,

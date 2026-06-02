@@ -1,0 +1,370 @@
+{
+  "info": {
+    "_postman_id": "8dbda336-7b3b-4ef8-a4fd-antrean-puskesmas",
+    "name": "Antrean Puskesmas API",
+    "description": "Postman collection untuk testing API backend Laravel project Antrean Puskesmas.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://backend-antrean-amx2lozuta-et.a.run.app/api",
+      "type": "string"
+    },
+    {
+      "key": "booking_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "poli_id",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Reference Data",
+      "item": [
+        {
+          "name": "GET Polis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/polis",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "polis"
+              ]
+            },
+            "description": "Mengambil daftar poli."
+          },
+          "response": []
+        },
+        {
+          "name": "GET Doctors",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/doctors",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "doctors"
+              ]
+            },
+            "description": "Mengambil daftar dokter."
+          },
+          "response": []
+        },
+        {
+          "name": "GET Schedules",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/schedules",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "schedules"
+              ]
+            },
+            "description": "Mengambil daftar jadwal beserta data dokter dan poli."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Booking",
+      "item": [
+        {
+          "name": "POST Create Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient_id\": 1,\n  \"schedule_id\": 1,\n  \"tanggal\": \"2026-06-02\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/booking",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "Membuat booking antrean baru. Pastikan patient_id dan schedule_id tersedia di database."
+          },
+          "response": []
+        },
+        {
+          "name": "GET Booking Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/booking/{{booking_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "booking",
+                "{{booking_id}}"
+              ]
+            },
+            "description": "Mengambil detail booking berdasarkan ID."
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Booking Status - Waiting",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"waiting\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/booking/{{booking_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "booking",
+                "{{booking_id}}"
+              ]
+            },
+            "description": "Mengubah status booking menjadi waiting."
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Booking Status - Calling",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"calling\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/booking/{{booking_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "booking",
+                "{{booking_id}}"
+              ]
+            },
+            "description": "Mengubah status booking menjadi calling."
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Booking Status - Done",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"done\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/booking/{{booking_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "booking",
+                "{{booking_id}}"
+              ]
+            },
+            "description": "Mengubah status booking menjadi done."
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Booking Status - Skipped",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"skipped\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/booking/{{booking_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "booking",
+                "{{booking_id}}"
+              ]
+            },
+            "description": "Mengubah status booking menjadi skipped."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Queue",
+      "item": [
+        {
+          "name": "GET Queues Today",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/queues",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "queues"
+              ]
+            },
+            "description": "Mengambil semua antrean hari ini."
+          },
+          "response": []
+        },
+        {
+          "name": "GET Queues Today by Poli",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/queues?poli_id={{poli_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "queues"
+              ],
+              "query": [
+                {
+                  "key": "poli_id",
+                  "value": "{{poli_id}}"
+                }
+              ]
+            },
+            "description": "Mengambil antrean hari ini berdasarkan poli."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Call Queue",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/call-queue/{{booking_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "call-queue",
+                "{{booking_id}}"
+              ]
+            },
+            "description": "Memanggil antrean berdasarkan booking ID. Backend akan mengubah status menjadi calling dan mengirim data ke Firestore active_queues jika Firebase dikonfigurasi."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -21,6 +21,12 @@ class FirebaseQueueService
 
     public function updateActiveQueue(Booking $booking)
     {
+        // Local/dev deploy tetap bisa memanggil antrean walau Firebase belum diset.
+        $projectId = Config::get('firebase.project_id', env('FIREBASE_PROJECT_ID'));
+        if (empty($projectId)) {
+            return;
+        }
+
         $booking->loadMissing(['patient', 'schedule.poli']);
 
         $poliId = $booking->schedule->poli_id;

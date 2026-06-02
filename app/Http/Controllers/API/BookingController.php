@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Booking;
+use App\Models\Patient;
 use App\Models\Schedule;
 use App\Models\Poli;
 use App\Services\FirebaseQueueService;
@@ -19,13 +20,29 @@ class BookingController extends Controller
             // Ubah 'integer' menjadi 'string'
             'patient_id' => 'required|string|exists:patients,id', 
             'schedule_id' => 'required|integer|exists:schedules,id',
-            'tanggal' => 'required|date'
+            'tanggal' => 'nullable|date',
+            'name' => 'required_without:patient_id|string',
+            'nik' => 'required_without:patient_id|string',
         ]);
 
+        $patientId = $request->patient_id;
+        if (! $patientId) {
+            $patient = Patient::firstOrCreate(
+                ['nik' => $request->nik],
+                [
+                    'nama' => $request->name,
+                    'no_hp' => $request->no_hp,
+                    'alamat' => $request->alamat,
+                ],
+            );
+            $patientId = $patient->id;
+        }
+
+        $tanggal = $request->tanggal ?? today()->toDateString();
         $schedule = Schedule::findOrFail($request->schedule_id);
         $poli = Poli::findOrFail($schedule->poli_id);
 
-        $lastBooking = Booking::whereDate('tanggal', $request->tanggal)
+        $lastBooking = Booking::whereDate('tanggal', $tanggal)
             ->whereHas('schedule', function ($q) use ($schedule) {
                 $q->where('poli_id', $schedule->poli_id);
             })
@@ -35,16 +52,16 @@ class BookingController extends Controller
         $nextNumber = 1;
 
         if ($lastBooking) {
-            $lastNumber = intval(substr($lastBooking->nomor_antrean, 1));
+            $lastNumber = intval(substr($lastBooking->nomor_antrean, strlen($poli->kode_poli)));
             $nextNumber = $lastNumber + 1;
         }
 
         $nomorAntrean = $poli->kode_poli . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
 
         $booking = Booking::create([
-            'patient_id' => $request->patient_id,
+            'patient_id' => $patientId,
             'schedule_id' => $request->schedule_id,
-            'tanggal' => $request->tanggal,
+            'tanggal' => $tanggal,
             'nomor_antrean' => $nomorAntrean,
             'status' => 'waiting'
         ]);
@@ -61,21 +78,43 @@ class BookingController extends Controller
 
     public function show($id)
     {
-        $booking = Booking::findOrFail($id);
+        $booking = Booking::with(['patient', 'schedule.doctor', 'schedule.poli'])
+            ->findOrFail($id);
         return response()->json($booking);
     }
 
-    public function queues()
+    public function queues(Request $request)
     {
-        $queues = Booking::with([
-            'patient',
-            'schedule.poli'
-        ])
-        ->whereDate('tanggal', today())
-        ->orderBy('nomor_antrean')
-        ->get();
+        $query = Booking::with(['patient', 'schedule.doctor', 'schedule.poli'])
+            ->whereDate('tanggal', today());
+
+        if ($request->filled('poli_id')) {
+            $poliId = (int) $request->query('poli_id');
+            $query->whereHas('schedule', function ($q) use ($poliId) {
+                $q->where('poli_id', $poliId);
+            });
+        }
+
+        $queues = $query->orderBy('nomor_antrean')->get();
 
         return response()->json($queues);
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:waiting,calling,done,skipped',
+        ]);
+
+        $booking = Booking::findOrFail($id);
+        $booking->status = $request->status;
+        $booking->save();
+
+        return response()->json([
+            'success' => true,
+            'data' => Booking::with(['patient', 'schedule.doctor', 'schedule.poli'])
+                ->find($booking->id),
+        ]);
     }
 
     // --- INI ADALAH BAGIAN YANG KITA UBAH UNTUK FIREBASE ---
@@ -93,21 +132,14 @@ class BookingController extends Controller
         } catch (Throwable $e) {
             Log::error('Firebase Error: '.$e->getMessage(), [
                 'booking_id' => $booking->id,
-                'exception' => $e,
             ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Queue status updated locally, but failed to write to Firebase.',
-                'firebase_error' => config('app.debug') ? $e->getMessage() : null,
-                'data' => $booking,
-            ], 502);
         }
 
         return response()->json([
             'success' => true,
             'message' => 'Queue called',
-            'data' => $booking
+            'data' => Booking::with(['patient', 'schedule.doctor', 'schedule.poli'])
+                ->find($booking->id),
         ]);
     }
 }

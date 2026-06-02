@@ -18,6 +18,7 @@ Route::get('/schedules', [ScheduleController::class, 'index']);
 Route::post('/booking', [BookingController::class, 'store']);
 
 Route::get('/booking/{id}', [BookingController::class, 'show']);
+Route::patch('/booking/{id}', [BookingController::class, 'updateStatus']);
 
 Route::get('/queues', [BookingController::class, 'queues']);
 

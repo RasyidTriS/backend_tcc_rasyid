@@ -16,7 +16,8 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'patient_id' => 'required|integer|exists:patients,id',
+            // Ubah 'integer' menjadi 'string'
+            'patient_id' => 'required|string|exists:patients,id', 
             'schedule_id' => 'required|integer|exists:schedules,id',
             'tanggal' => 'required|date'
         ]);
